@@ -29,26 +29,6 @@ This workflow automates that process by:
 
 ![Architecture](inbound-lead-qualifier-architecture.png)
 
-Workflow stages:
-
-```
-Lead Form / API
-       ↓
-     Webhook
-       ↓
-Lead Normalization
-       ↓
-AI Lead Scoring
-       ↓
-Lead Tier Routing
-   /      |      \
- HOT    WARM    COLD
-  ↓       ↓       ↓
-CRM     CRM     CRM
-  ↓       ↓       ↓
-Sales   Review    Log
-Alert   Email     Email
-```
 
 ---
 

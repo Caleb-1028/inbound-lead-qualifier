@@ -1,0 +1,1075 @@
+{
+  "name": "Inbound Lead Qualifier",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inbound-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        0
+      ],
+      "id": "33258aa9-7128-4a5e-be84-2f56bd056c61",
+      "name": "Webhook",
+      "webhookId": "a125f7df-67bf-4f9a-ab4d-25ce8a4e5a9c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "acfc8aab-4910-40e4-8608-ed2ef574bff7",
+              "name": "fullName",
+              "value": "={{ $json.body.firstName + ' ' + $json.body.lastName }}",
+              "type": "string"
+            },
+            {
+              "id": "0c3e92d4-a7bf-4835-857e-635bed940f2b",
+              "name": "email",
+              "value": "={{ $json.body.email.toLowerCase().trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "6b2adc1c-6a6c-4214-876a-41ae1b4f2738",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "1a64fa01-6a6c-453f-9ccc-acfcf01221f1",
+              "name": "jobTitle",
+              "value": "={{ $json.body.jobTitle || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "0ee64a09-30a2-45e1-ba6b-84882c8ea1d9",
+              "name": "employeeCount",
+              "value": "={{ Number($json.body.employeeCount || 0) }}",
+              "type": "string"
+            },
+            {
+              "id": "2dbc5369-583d-4208-8ce5-113bcb07f04b",
+              "name": "message",
+              "value": "={{ $json.body.message || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "72b674fa-42ea-4997-a58e-e391399428ac",
+              "name": "source",
+              "value": "={{ $json.body.source || 'Unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "55a739e4-3c81-4d62-b618-e17225efd62b",
+              "name": "submittedAt",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "45e97544-31a5-4b0f-853f-e73df1e54bb0",
+              "name": "leadStatus",
+              "value": "new",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "63241e86-4008-4ec7-a52a-3275c9b5432a",
+      "name": "Normalize Lead Data"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.aiTier }}",
+                    "rightValue": "hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "747678a3-a0c9-42bf-9fd7-0f73f6405e11"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "42459fac-41df-428b-956f-b5fe6c24ffcc",
+                    "leftValue": "={{ $json.aiTier }}",
+                    "rightValue": "warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0bb03fb2-62ff-4239-925c-f17ebd602cdf",
+                    "leftValue": "={{ $json.aiTier }}",
+                    "rightValue": "cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        -16
+      ],
+      "id": "f75f4244-530f-46ee-8655-1e83f2096ee9",
+      "name": "Route by Tier"
+    },
+    {
+      "parameters": {
+        "sendTo": "matkovich.caleb@gmail.com",
+        "subject": "=Hot lead: {{ $json.fullName }} from {{ $json.company }}",
+        "message": "=A new hot lead has been routed.  Name: {{ $json.fullName }} Email: {{ $json.email }} Company: {{ $json.company }} Title: {{ $json.jobTitle }}  AI Score: {{ $json.aiScore }} Priority: {{ $json.priority }} Segment: {{ $json.segment }}  Reason: {{ $json.reason }}  Original Message: {{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        -192
+      ],
+      "id": "ca993ea3-bd61-4054-9554-63589620738c",
+      "name": "Send Hot Lead Alert",
+      "webhookId": "69144c7b-6a06-4ca6-831a-9ada1acf48c4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DjhLUHldoj768Dck",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "matkovich.caleb@gmail.com",
+        "subject": "=Warm lead received: {{ $json.fullName }} at {{ $json.company }}",
+        "message": "=A warm lead was captured.\n\nScore: {{ $json.aiScore }}\nPriority: {{ $json.priority }}\n\nSuggested action: review within 24 hours.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        0
+      ],
+      "id": "cf17fd11-9aef-470e-b880-fb5d71fb12fb",
+      "name": "Send Warm Lead Alert",
+      "webhookId": "73a1624f-3c6d-4e0f-ab77-a9a9ae0582fe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DjhLUHldoj768Dck",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "matkovich.caleb@gmail.com",
+        "subject": "=Cold lead logged: {{ $json.fullName }}",
+        "message": "=A cold lead was logged.\n\nCompany: {{ $json.company }}\nScore: {{ $json.aiScore }}\nReason: {{ $json.reason }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        208
+      ],
+      "id": "6097d7d0-0e35-40b4-b943-91aab0d6e68f",
+      "name": "Send Cold Lead Alert",
+      "webhookId": "23a96a02-02fd-40d1-8bd7-3b8b921516b9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DjhLUHldoj768Dck",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a B2B SaaS lead qualification assistant.\n\nEvaluate the inbound lead and return only raw JSON with this exact structure:\n{\n  \"lead_score\": 0,\n  \"qualified\": false,\n  \"segment\": \"startup\",\n  \"priority\": \"low\",\n  \"reason\": \"\"\n}\n\nImportant:\n- Do not score only on urgency.\n- Consider 3 dimensions:\n  1. ICP fit\n  2. buyer intent / urgency\n  3. decision-making authority\n\nScoring rules:\n- HOT / high priority:\n  Strong ICP fit and a clear business use case.\n  Usually includes at least two of the following:\n  1. explicit operational pain or problem to solve\n  2. likely decision-maker or strong operational title\n  3. clear interest in implementing automation, improving a workflow, or speaking about a solution soon\n\n- WARM / medium priority:\n  Relevant company and use case, but more exploratory.\n  Interest exists, but urgency, authority, or timing is less clear.\n\n- COLD / low priority:\n  Student research, job seeker, unrelated inquiry, clearly poor fit, or non-commercial interest.\n\nInterpretation rules:\n- A lead does not need extreme urgency to be high priority.\n- If the company is a strong fit, the use case is directly relevant, and the person likely influences the workflow, that can still be high priority.\n- Exploratory language should lower a score, but should not prevent a high score when the business pain and fit are very strong.\n- Only assign medium priority when the lead is relevant but the problem, timing, or ownership is still somewhat unclear.\n\nMessages about automating inbound lead qualification, lead routing, sales workflows, or GTM operations should be treated as especially strong commercial intent.\n\nSuggested score bands:\n- high priority: 80-100\n- medium priority: 45-79\n- low priority: 0-44\n\nQualification rules:\n- qualified = true for most high and medium priority leads\n- qualified = false for low priority leads\n\nAdditional guidance:\n- Messages using words like \"exploring\", \"curious\", \"researching\", or \"learning more\" should often be medium priority if the company and use case are relevant.\n- Do not assign high priority just because the message mentions automation.\n- Do not assign low priority just because urgency is weak.\n\nLead data:\nFull name: {{ $json.fullName }}\nEmail: {{ $json.email }}\nCompany: {{ $json.company }}\nJob title: {{ $json.jobTitle }}\nEmployee count: {{ $json.employeeCount }}\nMessage: {{ $json.message }}\nSource: {{ $json.source }}\n\nReturn only raw JSON. Do not wrap in markdown."
+            },
+            {
+              "content": "=Evaluate this inbound lead for ICP fit and sales priority.\n\nFirst Name: {{$json.body.firstName}}\nLast Name: {{$json.body.lastName}}\nEmail: {{$json.body.email}}\nCompany: {{$json.body.company}}\nJob Title: {{$json.body.jobTitle}}\nEmployee Count: {{$json.body.employeeCount}}\nSource: {{$json.body.source}}\nMessage: {{$json.body.message}}\n\nReturn only raw JSON. Do not wrap the JSON in markdown code fences."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        0
+      ],
+      "id": "15f3d6ef-6a82-48ba-bd95-c57f61631bc1",
+      "name": "AI Lead Scoring",
+      "credentials": {
+        "openAiApi": {
+          "id": "wcAJwfpsLsqzv30U",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const original = $('Normalize Lead Data').item.json;\nconst current = $input.item.json;\n\nconst rawText =\n  current.output?.[0]?.content?.[0]?.text ?? \"\";\n\nconst cleanedText = rawText\n  .replace(/^```json\\s*/i, \"\")\n  .replace(/^```\\s*/i, \"\")\n  .replace(/\\s*```$/i, \"\")\n  .trim();\n\nlet parsed;\n\ntry {\n  parsed = JSON.parse(cleanedText);\n} catch (error) {\n  parsed = {\n    lead_score: 0,\n    qualified: false,\n    segment: \"unknown\",\n    priority: \"low\",\n    reason: \"Could not parse AI output\"\n  };\n}\n\nconst aiScore = Number(parsed.lead_score ?? 0);\n\nlet aiTier = \"cold\";\nif (parsed.priority === \"high\") {\n  aiTier = \"hot\";\n} else if (parsed.priority === \"medium\") {\n  aiTier = \"warm\";\n}\n\nlet aiAction = \"manual_review\";\nif (parsed.qualified === true && aiTier === \"hot\") {\n  aiAction = \"route_to_sales\";\n} else if (parsed.qualified === true && aiTier === \"warm\") {\n  aiAction = \"review\";\n}\n\nreturn {\n  json: {\n    submittedAt: original.submittedAt ?? \"\",\n    fullName: original.fullName ?? \"\",\n    email: original.email ?? \"\",\n    company: original.company ?? \"\",\n    jobTitle: original.jobTitle ?? \"\",\n    employeeCount: original.employeeCount ?? \"\",\n    source: original.source ?? \"\",\n    message: original.message ?? \"\",\n\n    lead_score: aiScore,\n    qualified: Boolean(parsed.qualified),\n    segment: parsed.segment ?? \"unknown\",\n    priority: parsed.priority ?? \"low\",\n    reason: parsed.reason ?? \"\",\n\n    aiScore,\n    aiTier,\n    aiReason: parsed.reason ?? \"\",\n    aiAction,\n\n    workflowVersion: \"v1\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "e5f8a9dd-528e-493d-ab0e-ae365e043d42",
+      "name": "Parse AI Result"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q",
+          "mode": "list",
+          "cachedResultName": "Inbound Lead Qualifier (Hubspot Alternative)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "submittedAt": "={{ $json.submittedAt }}",
+            "fullName": "={{ $json.fullName }}",
+            "email": "={{ $json.email }}",
+            "jobTitle": "={{ $json.jobTitle }}",
+            "company": "={{ $json.company }}",
+            "aiScore": "={{ $json.aiScore }}",
+            "qualified": "={{ $json.qualified }}",
+            "segment": "={{ $json.segment }}",
+            "priority": "={{ $json.priority }}",
+            "reason": "={{ $json.reason }}",
+            "aiTier": "={{ $json.aiTier }}",
+            "message": "={{ $json.message }}",
+            "workflowVersion": "={{ $json.workflowVersion }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "jobTitle",
+              "displayName": "jobTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "aiScore",
+              "displayName": "aiScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "qualified",
+              "displayName": "qualified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "segment",
+              "displayName": "segment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "aiTier",
+              "displayName": "aiTier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "workflowVersion",
+              "displayName": "workflowVersion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        -192
+      ],
+      "id": "69390ab5-d6c7-401a-ae3e-8a05239adf17",
+      "name": "Log Hot Lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JJZNH1F86NY2ZkXE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q",
+          "mode": "list",
+          "cachedResultName": "Inbound Lead Qualifier (Hubspot Alternative)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "submittedAt": "={{ $json.submittedAt }}",
+            "fullName": "={{ $json.fullName }}",
+            "email": "={{ $json.email }}",
+            "company": "={{ $json.company }}",
+            "jobTitle": "={{ $json.jobTitle }}",
+            "aiScore": "={{ $json.aiScore }}",
+            "qualified": "={{ $json.qualified }}",
+            "segment": "={{ $json.segment }}",
+            "priority": "={{ $json.priority }}",
+            "reason": "={{ $json.reason }}",
+            "aiTier": "={{ $json.aiTier }}",
+            "message": "={{ $json.message }}",
+            "workflowVersion": "={{ $json.workflowVersion }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "jobTitle",
+              "displayName": "jobTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "aiScore",
+              "displayName": "aiScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qualified",
+              "displayName": "qualified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "segment",
+              "displayName": "segment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "aiTier",
+              "displayName": "aiTier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflowVersion",
+              "displayName": "workflowVersion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "0e69b89e-3b4d-4113-b697-54b384901a28",
+      "name": "Log Warm Lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JJZNH1F86NY2ZkXE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q",
+          "mode": "list",
+          "cachedResultName": "Inbound Lead Qualifier (Hubspot Alternative)",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18VKw4qfCAJTFqD7JPc0P4ROpc7Ocgu0LCvfLwZTpF0Q/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "submittedAt": "={{ $json.submittedAt }}",
+            "fullName": "={{ $json.fullName }}",
+            "email": "={{ $json.email }}",
+            "company": "={{ $json.company }}",
+            "jobTitle": "={{ $json.jobTitle }}",
+            "qualified": "={{ $json.qualified }}",
+            "aiScore": "={{ $json.aiScore }}",
+            "segment": "={{ $json.segment }}",
+            "priority": "={{ $json.priority }}",
+            "reason": "={{ $json.reason }}",
+            "aiTier": "={{ $json.aiTier }}",
+            "message": "={{ $json.message }}",
+            "workflowVersion": "={{ $json.workflowVersion }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "jobTitle",
+              "displayName": "jobTitle",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "aiScore",
+              "displayName": "aiScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "qualified",
+              "displayName": "qualified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "segment",
+              "displayName": "segment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "aiTier",
+              "displayName": "aiTier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflowVersion",
+              "displayName": "workflowVersion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        208
+      ],
+      "id": "1f2213c3-76b6-42df-84ef-e9c94cd09b42",
+      "name": "Log Cold Lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JJZNH1F86NY2ZkXE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"ok\",\n  \"tier\": \"warm\",\n  \"message\": \"Lead queued for review\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1680,
+        0
+      ],
+      "id": "c9ea9582-135c-41fa-88de-14064dad0972",
+      "name": "Respond to Webhook (Warm)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"ok\",\n  \"tier\": \"hot\",\n  \"message\": \"Lead received and routed to sales\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1680,
+        -192
+      ],
+      "id": "fdb615e2-9857-404e-a3d5-8faf6f5ed978",
+      "name": "Respond to Webhook (Hot)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"ok\",\n  \"tier\": \"cold\",\n  \"message\": \"Lead logged\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1680,
+        208
+      ],
+      "id": "49d22ec5-23d4-47b4-a013-6cef3d2ffcaa",
+      "name": "Respond to Webhook (Cold)"
+    },
+    {
+      "parameters": {
+        "content": "Lead Intake\n\n• Leads enter via webhook from a form or API\n• Input fields are normalized into a consistent schema"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -224
+      ],
+      "id": "51c8c993-5acc-4339-8686-643d9e545e77",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "AI Lead Qualification\n\n• LLM evaluates ICP fit and buying intent\n• Lead receives score and classification\n• Output parsed into structured fields",
+        "height": 128,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -224
+      ],
+      "id": "6d25d0b7-aec1-43fb-b602-ff8acd5eae27",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Lead Routing + Actions\n\n• Leads categorized as hot / warm / cold\n• Each tier logged to CRM table\n• Tier-based email alerts triggered\n• API returns classification response",
+        "height": 144,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -224
+      ],
+      "id": "75a8d71a-cae1-41d6-b608-544b6ec9c8fd",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead Data": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Tier": {
+      "main": [
+        [
+          {
+            "node": "Log Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Warm Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Cold Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Hot Lead Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Hot)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Warm Lead Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Warm)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Cold Lead Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (Cold)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Scoring": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Result": {
+      "main": [
+        [
+          {
+            "node": "Route by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Hot Lead": {
+      "main": [
+        [
+          {
+            "node": "Send Hot Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Warm Lead": {
+      "main": [
+        [
+          {
+            "node": "Send Warm Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Cold Lead": {
+      "main": [
+        [
+          {
+            "node": "Send Cold Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "810364db-a36e-44ef-aa0c-3fbad37ff7b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b2fde4c5f25a48fa8819e0144fe1a12fb61865dc322de00c50058aa2ce7f5583"
+  },
+  "id": "2nH2CcK3AJjg5ZNW",
+  "tags": []
+}

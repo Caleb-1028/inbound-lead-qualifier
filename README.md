@@ -47,12 +47,6 @@ This allows the workflow to integrate with:
 - marketing automation systems
 - third-party lead sources
 
-Example webhook endpoint:
-
-```
-POST /webhook/inbound-lead
-```
-
 ---
 
 ### 2. Lead Normalization
@@ -67,7 +61,9 @@ Typical normalized fields include:
 - jobTitle  
 - employeeCount  
 - message  
-- source  
+- source
+- submittedAt
+- leadStatus 
 
 ---
 
@@ -121,11 +117,13 @@ Leads are routed into one of three pipelines.
 #### Warm Leads
 - logged to CRM table  
 - review notification email sent  
-
+- webhook response returned
+  
 #### Cold Leads
 - logged to CRM table  
 - low-priority notification sent  
-
+- webhook response returned
+  
 ---
 
 # Example Input
@@ -165,25 +163,22 @@ Webhook response returned to the client:
 
 Leads are stored in a **Google Sheets table acting as a lightweight CRM database**.
 
-Example row:
-
-| fullName | company | aiScore | priority | aiTier |
-|--------|--------|--------|--------|--------|
-| Alex Rivera | FintechCo | 85 | high | hot |
-
 Fields logged include:
 
 - submittedAt  
 - fullName  
 - email  
 - company  
-- jobTitle  
-- source  
-- message  
-- aiScore  
-- priority  
-- aiTier  
-- reason  
+- jobTitle
+- aiScore
+- source
+- qualified
+- segment    
+- priority
+- reason 
+- aiTier
+- message
+- workflowVersion    
 
 ---
 
@@ -193,10 +188,11 @@ Email alerts are sent based on lead tier.
 
 Hot leads trigger **immediate sales notifications** including:
 
-- lead details  
-- AI score  
-- qualification reasoning  
+- lead details
 - contact information  
+- AI score  
+- qualification reasoning
+- message  
 
 Warm and cold leads generate **lower priority notifications** for tracking and follow-up.
 
